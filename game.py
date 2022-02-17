@@ -2,32 +2,33 @@ import pygame as pg
 pg.init()
 
 class Bola:
-    def __init__(self, x, y, color = (255,255,255), radio = 10):
+    def __init__(self, padre, x, y, color = (255,255,255), radio = 10):
+        self.padre = padre
         self.posX = x
         self.posY = y
         self.color = color
         self.radio = radio
+        self.vx = 1
+        self.vy = 1
     
-    def pintate(self, pantalla):
-        pg.draw.circle(pantalla, self.color, (self.posX,self.posY), self.radio)
+    def dibujar(self):
+        pg.draw.circle(self.padre, self.color, (self.posX,self.posY), self.radio)
     
-    def mover(self, ancho, alto):
-        movx = 1
-        movy = 1
-        
-        if self.posX == ancho-self.radio or self.posX == 0+self.radio:
-            movx * -1
-        if self.posY == alto - self.radio or self.posY == 0 + self.radio:
-            movy * -1
-        self.posX += movx
-        self.posY += movy
+    def mover(self):
+        self.posX += self.vx
+        self.posY += self.vy
 
+        if self.posX >= self.padre.get_width() - self.radio or self.posX <= self.radio:
+            self.vx *= -1
+        if self.posY >= self.padre.get_height() - self.radio or self.posY <= self.radio:
+            self.vy *= -1
+        
 
 class Game:
     
     def __init__(self, ancho = 600, alto= 800):
         self.pantalla = pg.display.set_mode((ancho, alto))
-        self.bola = Bola(ancho//2, alto//2,(255,255,0))
+        self.bola = Bola(self.pantalla,ancho//2, alto//2,(255,255,0))
 
     def bucle_ppal(self):
         game_over = False
@@ -41,8 +42,8 @@ class Game:
 
 
             self.pantalla.fill((255,0,0))
-            self.bola.mover(self.pantalla.get_width(), self.pantalla.get_height())
-            self.bola.pintate(self.pantalla)
+            self.bola.mover()
+            self.bola.dibujar()
 
             pg.display.flip()
 
