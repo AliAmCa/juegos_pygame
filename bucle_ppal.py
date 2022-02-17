@@ -10,8 +10,8 @@ game_over = False
 
 x = 300
 y = 400
-conversorx = 1
-conversory = 1
+movx = 1
+movy = 1
 while not game_over:
     eventos = pg.event.get()
 
@@ -22,13 +22,13 @@ while not game_over:
 
 
     # Modificar los objetos del juego
-    if x == 600 or x == 0:
-        conversorx *=-1
-    if y == 400 or y == 0:
-        conversory*= -1
+    if x == 590 or x == 10:
+        movx *=-1
+    if y == 790 or y == 10:
+        movy *= -1
 
-    x += 1 * conversorx
-    y += 1 *conversory
+    x +=  movx
+    y += movy
     # Aquí no hay nada que hacer
 
     # Refrescar la  pantalla
