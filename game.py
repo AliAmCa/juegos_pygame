@@ -13,8 +13,9 @@ class Rock():
     def dibujar(self):
         pg.draw.rect(self.padre,self.color, (self.x, self.y, self.anchura, self.altura) )
 
-    def romper(self):
-        pass
+    def desaparecer(self):
+        
+            self.color =(255,0,0)
 
 
 class Player():
@@ -66,12 +67,13 @@ class Bola:
 
 class Game:
     
-    bolas = []
+    rocas = []
     def __init__(self, ancho = 600, alto= 800):
         self.pantalla = pg.display.set_mode((ancho, alto))
         self.player = Player(self.pantalla)
         self.bola = Bola(self.pantalla,self.player, ancho//2, alto//2,(255,255,0))
-        
+        for i in range(4):
+            self.rocas.append(Rock(self.pantalla, 40 + 140*i, 20 ))
 
     def bucle_ppal(self):
         game_over = False
@@ -85,8 +87,14 @@ class Game:
 
 
             self.pantalla.fill((255,0,0))
+            for roca in self.rocas:
+                roca.dibujar()
+                if self.bola.posY == roca.y + roca.altura:
+                    if roca.x<= self.bola.posX<= roca.x + roca.anchura:
+                        roca.desaparecer()
             self.bola.mover()
             self.bola.dibujar()
+            
             self.player.dibujar()
             self.player.mover(evento)
 
