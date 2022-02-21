@@ -1,47 +1,57 @@
-import random
+
 import pygame as pg
 pg.init()
-class Rock():
-    def __init__(self, padre, x, y):
+
+class Vigneta:
+    def __init__(self, padre, x,y, ancho, alto, color = (255,255,255)):
         self.padre = padre
-        self.altura = 20
-        self.anchura = 100
         self.x = x
         self.y = y
-        self.color = (0,0,0)
+        self.alto = alto
+        self.ancho = ancho
+        self.color = color
+        self.vx = 0
+        self.vy = 0
 
     def dibujar(self):
-        pg.draw.rect(self.padre,self.color, (self.x, self.y, self.anchura, self.altura) )
+        pass
+    def mover(self):
+        pass
+
+class Rock(Vigneta):
+    
+    def dibujar(self):
+        pg.draw.rect(self.padre,self.color, (self.x, self.y, self.ancho, self.alto) )
 
     def desaparecer(self):
-        
             self.color =(255,0,0)
 
 
-class Player():
-    def __init__(self, padre):
-        self.padre = padre
-        self.altura = 20
-        self.anchura = 100
-        self.posX =self.padre.get_width()//2 -50
-        self.posY = self.padre.get_height()- 50
-        self.color = (255,255,255)
+class Player(Vigneta):
+    def __init__(self, padre, x,y, ancho = 100, alto = 20, color = (255,255,255)):
+        super().__init__(padre, x,y, ancho, alto, color)
+        self.vx = 5
+        
     def dibujar(self):
-        pg.draw.rect(self.padre, self.color, (self.posX, self.posY, self.anchura, self.altura))
+        pg.draw.rect(self.padre, self.color, (self.x, self.y, self.ancho, self.alto))
 
-    def mover(self, evento):
-        if evento.type == pg.KEYDOWN:
-            if evento.key == pg.K_RIGHT:
-                self.posX +=2
+    def mover(self):
+        teclas = pg.key.get_pressed()
 
-            if evento.key == pg.K_LEFT:
-                self.posX -= 2
+        if teclas[pg.K_LEFT]:
+           self.x -= self.vx
 
+        if teclas[pg.K_RIGHT]:
+            self.x += self.vx
+        if self.x <= 0:
+            self.x = 0
+        if self.x +self.ancho >= self.padre.get_width():
+            self.x = self.padre.get_width() - self.ancho
 
 class Bola:
-    def __init__(self, padre, player, x, y, color = (255,255,255), radio = 10):
+    def __init__(self, padre, x, y, color = (255,255,255), radio = 10):
         self.padre = padre
-        self.player = player
+        
         self.posX = x
         self.posY = y
         self.color = color
@@ -60,9 +70,14 @@ class Bola:
             self.vx *= -1
         if self.posY >= self.padre.get_height() - self.radio or self.posY <= self.radio:
             self.vy *= -1
-        if self.posY == self.player.posY and self.player.posX<=self.posX <=(self.player.posX+self.player.anchura):
-            self.vy *= -1
+        
 
+    def compruebaChoque(self, otro):
+        if (self.posX - self.radio in range(otro.x, otro.x +  otro.ancho) or \
+            self.posX + self.radio in range(otro.x, otro.x +  otro.ancho)) and \
+            (self.posY - self.radio in range(otro.y, otro.y + otro.alto) or \
+            self.posY + self.radio in range(otro.y, otro.y + otro.alto)):
+                self.vy *= -1
 
 
 class Game:
@@ -70,10 +85,10 @@ class Game:
     rocas = []
     def __init__(self, ancho = 600, alto= 800):
         self.pantalla = pg.display.set_mode((ancho, alto))
-        self.player = Player(self.pantalla)
-        self.bola = Bola(self.pantalla,self.player, ancho//2, alto//2,(255,255,0))
+        self.player = Player(self.pantalla, ancho//2, alto-30)
+        self.bola = Bola(self.pantalla, ancho//2, alto//2,(255,255,0))
         for i in range(4):
-            self.rocas.append(Rock(self.pantalla, 40 + 140*i, 20 ))
+            self.rocas.append(Rock(self.pantalla, 40 + 140*i, 20 , 100, 20))
 
     def bucle_ppal(self):
         game_over = False
@@ -89,14 +104,15 @@ class Game:
             self.pantalla.fill((255,0,0))
             for roca in self.rocas:
                 roca.dibujar()
-                if self.bola.posY == roca.y + roca.altura:
-                    if roca.x<= self.bola.posX<= roca.x + roca.anchura:
+                if self.bola.posY == roca.y + roca.alto:
+                    if roca.x<= self.bola.posX<= roca.x + roca.ancho:
                         roca.desaparecer()
+
             self.bola.mover()
             self.bola.dibujar()
-            
+            self.bola.compruebaChoque(self.player)
             self.player.dibujar()
-            self.player.mover(evento)
+            self.player.mover()
 
             
 

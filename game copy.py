@@ -65,24 +65,23 @@ class Bola:
 
 
 class Game:
-    colors = {
-        1: (0,102,204),
-        2: (102,204,0),
-        3: (204,0,204),
-        4: (0,0,204),
-        5: (255,128,0),
-        6: (0,255,255)
-    }
+   
     bolas = []
     def __init__(self, ancho = 600, alto= 800):
         self.pantalla = pg.display.set_mode((ancho, alto))
         self.player = Player(self.pantalla)
         self.bola = Bola(self.pantalla,self.player, ancho//2, alto//2,(255,255,0))
-        for i in range(10):
-            x = random.randint(0,ancho)
-            y = random.randint(0,alto)
-            color = self.colors[random.randint(1,6)]
-            self.bolas.append(Bola(self.pantalla, self.player, x, y, color))
+        
+        for i in range(random.randint(2,20)):
+           
+            radio = random.randint(5,20)
+            x = random.randint(radio,ancho-radio)
+            y = random.randint(radio,alto-radio)
+            color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+            bola = Bola(self.pantalla, self.player, x, y, color, radio)
+            bola.vx = random.randint(2,6)* random.choice([1,-1])
+            bola.vy = random.randint(2,6)* random.choice([1,-1])
+            self.bolas.append(bola)
 
     def bucle_ppal(self):
         game_over = False
@@ -101,9 +100,9 @@ class Game:
             self.player.dibujar()
             self.player.mover(evento)
 
-            for i in range(10):
-                self.bolas[i].dibujar()
-                self.bolas[i].mover()
+            for bola in self.bolas:
+                bola.dibujar()
+                bola.mover()
 
 
             pg.display.flip()
