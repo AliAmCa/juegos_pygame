@@ -1,5 +1,5 @@
 from arkanoid.game import Game
 
-juego = Game()
+g = Game()
+g.lanzar()
 
-juego.bucle_ppal()
