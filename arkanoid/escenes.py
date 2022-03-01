@@ -20,26 +20,32 @@ class Partida (Escena):
 
         
         self.player = Player(self.pantalla, self.pantalla.get_width()//2, self.pantalla.get_height()-30)
-        self.bola = Bola(self.pantalla, self.pantalla.get_width()//2, self.pantalla.get_height()//2,(255,255,0))
-        self.rocas = []
-        self.todos = []
-        self.todos.append(self.bola)
-        self.todos.append(self.player)
+        self.bola = Bola(self.pantalla, self.pantalla.get_width()//2, self.pantalla.get_height()//2)
+        self.fondo = pg.image.load("./resources/images/background.jpg")
+        self.rocas = pg.sprite.Group()
+        self.todos = pg.sprite.Group()
 
         self.contador_vidas = 3
-       
+        self.reset()    
         self.puntos = 0
-
+    
+    def reset(self):
+        self.rocas.empty()
+        self.todos.empty()
+        self.todos.add(self.bola, self.player)
+        self.contador_vidas = 3
+    
     def creaRocas(self, nivel):
         for col, fil in niveles[nivel]:
-            self.rocas.append(Rock(self.pantalla, 5 + 60*col, 25 + 30*fil , 50, 20))
+            self.rocas.add(Rock(5 + 60*col, 25 + 30*fil , 50, 20))
 
-        self.todos = self.todos + self.rocas
+        self.todos.add(self.rocas)
         
 
-    def bucle_ppal(self):
+    def bucle_ppal(self) -> bool:
         game_over = False
         nivel = 0
+        self.reset()
 
         while self.contador_vidas > 0 and not game_over and nivel < len(niveles):
             self.creaRocas(nivel)
@@ -54,10 +60,11 @@ class Partida (Escena):
                         return False
 
 
-                self.pantalla.fill((255,0,0))
+                
+                self.pantalla.blit(self.fondo, (0,0))
+               
 
-                for objeto in self.todos:
-                    objeto.mover()
+                self.todos.update()
 
 
                 for roca in self.rocas:
@@ -74,8 +81,7 @@ class Partida (Escena):
                     self.contador_vidas -= 1
                     self.bola.reset()
 
-                for objeto in self.todos:
-                    objeto.dibujar()
+                self.todos.draw(self.pantalla)
 
                 pg.display.flip()
 
@@ -104,10 +110,12 @@ class GameOver(Escena):
                         return True
 
             self.pantalla.fill((30,30,255))
+
             texto = self.fuente.render("GAME OVER", True, (255,255,0))
+            rectTexto = texto.get_rect()
+            rectPantalla = self.pantalla.get_rect()
 
-            print (texto.get_rect())
+            #print (texto.get_rect())
 
-            self.pantalla.blit(texto, (10,10))
-
+            self.pantalla.blit(texto, (rectPantalla.centerx - rectTexto.centerx, rectPantalla.centery - rectTexto.centery))
             pg.display.flip()

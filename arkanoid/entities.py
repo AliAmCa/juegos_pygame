@@ -1,49 +1,41 @@
 import pygame as pg
 
-class Vigneta:
-    def __init__(self, padre, x,y, ancho, alto, color = (255,255,255)):
+class Vigneta(pg.sprite.Sprite):
+    def __init__(self, padre):
+        super().__init__()
         self.padre = padre
-        self.x = x
-        self.y = y
-        self.alto = alto
-        self.ancho = ancho
-        self.color = color
-        self.vx = 0
-        self.vy = 0
-
-    @property
-    def xcentro(self):
-        return self.x + self.ancho//2
-    @property
-    def ycentro(self):
-        return self.y + self.alto//2
-
-    def dibujar(self):
-        pass
-    def mover(self):
-        pass
 
     def intersecta(self, otro) -> bool:
-        return (self.x  in range(otro.x, otro.x +  otro.ancho) or \
-                self.x + self.ancho in range(otro.x, otro.x +  otro.ancho)) and \
-                (self.y  in range(otro.y, otro.y + otro.alto) or \
-                self.y + self.alto in range(otro.y, otro.y + otro.alto))
+        if self.rect.w > otro.rect.w:
+            menor_ancho = otro
+            mayor_ancho = self
+        else:
+            menor_ancho = self
+            mayor_ancho = otro
+
+        if self.rect.h > otro.rect.h:
+            menor_alto = otro
+            mayor_alto = self
+        else:
+            menor_alto = self
+            mayor_alto = otro
+
+        return (menor_ancho.rect.left  in range(mayor_ancho.rect.left, mayor_ancho.rect.right) or \
+                menor_ancho.rect.right  in range(mayor_ancho.rect.left, mayor_ancho.rect.right)) and \
+                (menor_alto.rect.top  in range(mayor_alto.rect.top, mayor_alto.rect.bottom) or \
+                menor_alto.rect.bottom in range(mayor_alto.rect.top, mayor_alto.rect.bottom))
                 
  
 class Rock(Vigneta):
-    def __init__(self,padre, x, y, ancho, alto,color = (0,0,0)):
-        super().__init__(padre, x, y, ancho, alto,color)
+    
+    def __init__(self, x, y, ancho, alto,color = (0,255,255)):
+        super().__init__(None)
+        self.image = pg.Surface((ancho, alto))
+        pg.draw.rect(self.image, color, (0,0,ancho,alto))
+        self.rect = self.image.get_rect(x=x, y=y)
+      
         
-
-    def dibujar(self):
-       
-        pg.draw.rect(self.padre,self.color, (self.x, self.y, self.ancho, self.alto) )
-    '''
-    def desaparecer(self):
-            self.color =(255,0,0)
-            self.x= 0-self.ancho
-            self.y= 0-self.alto
-    '''
+   
     def comprobarToque(self, bola):
         if self.intersecta(bola):
             bola.vy *=-1
@@ -51,53 +43,77 @@ class Rock(Vigneta):
         return False
 
 class Player(Vigneta):
-    def __init__(self, padre, x,y, ancho = 100, alto = 20, color = (255,255,255)):
-        super().__init__(padre, x,y, ancho, alto, color)
+    
+    def __init__(self, padre, centrox, centroy):
+        super().__init__(padre)
+        self.imagenes = []
+        for i in range(3):
+            self.imagenes.append( pg.image.load(f"./resources/images/electric0{i}.png"))
+        
+        self.estado = 0
+        
+        self.frecuenciaCambio = 5
+        self.contador_frames =0
+        self.image = self.imagenes[self.estado]
+        self.rect = self.image.get_rect(centerx = centrox, centery = centroy)
+        
         self.vx = 5
         
-    def dibujar(self):
-        pg.draw.rect(self.padre, self.color, (self.x, self.y, self.ancho, self.alto))
+        
 
-    def mover(self):
+    def update(self):
         teclas = pg.key.get_pressed()
 
         if teclas[pg.K_LEFT]:
-           self.x -= self.vx
+           self.rect.x -= self.vx
 
         if teclas[pg.K_RIGHT]:
-            self.x += self.vx
-        if self.x <= 0:
-            self.x = 0
-        if self.x +self.ancho >= self.padre.get_width():
-            self.x = self.padre.get_width() - self.ancho
+            self.rect.x += self.vx
+        if self.rect.x <= 0:
+            self.rect.x = 0
+        if self.rect.right >= self.padre.get_width():
+            self.rect.right = self.padre.get_width() 
+
+            
+        self.contador_frames +=1
+        if self.contador_frames == self.frecuenciaCambio:
+            self.estado = (self.estado +1) % len(self.imagenes)
+            self.contador_frames =0
+
+        self.image = self.imagenes[self.estado]
 
 class Bola(Vigneta):
-    def __init__(self, padre, x, y, color = (255,255,255), radio = 10):
-        super().__init__(padre, x-radio, y-radio, 2*radio, 2*radio, color)
-        self.radio = radio
+    def __init__(self, padre, centrox, centroy, radio = 10, color = (255,255,255) ):
+        super().__init__(padre)
+
+        self.image = pg.Surface((radio*2, radio*2))
+        pg.draw.circle(self.image, color, (radio,radio), radio)
+        self.rect = self.image.get_rect(center = (centrox,centroy))
+
         self.vx = 3
         self.vy = 3
-        self.xinit = x
-        self.yinit = y
+        self.xinit = centrox
+        self.yinit = centroy
         self.esta_viva = True
     
-    def dibujar(self):
-        pg.draw.circle(self.padre, self.color, (self.xcentro, self.ycentro), self.radio)
-    
-    def mover(self):
-        self.x += self.vx
-        self.y += self.vy
 
-        if self.x >= self.padre.get_width() - self.ancho or self.x <= 0:
+    
+    def update(self):
+        self.rect.x += self.vx
+        self.rect.y += self.vy
+
+        if self.rect.right >= self.padre.get_width()  or self.rect.x <= 0:
             self.vx *= -1
-        if self.y <= 0:
+        if self.rect.y <= 0:
             self.vy *= -1
-        if self.y >= self.padre.get_height() - self.alto:
+        if self.rect.bottom >= self.padre.get_height():
             self.esta_viva = False
             
     def reset(self):
-        self.x = self.xinit
-        self.y = self.yinit
+        self.rect.x = self.xinit
+        self.rect.y = self.yinit
+        self.vx = 3
+        self.vy = 3
         self.esta_viva = True
         
     def compruebaChoque(self, otro):
